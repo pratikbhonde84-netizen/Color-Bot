@@ -8,9 +8,8 @@ from threading import Thread
 # Tumhara Bot Token
 bot = telebot.TeleBot("8965203772:AAHdx_rTZJpYTDsAdRf7UHH7sfvDPa0lS_Q")
 
-# ⚠️ WARNING: YAHAN APNE TELEGRAM CHANNEL KA USERNAME DAALNA MAT BHULNA!
-# Example: CHANNEL_ID = "@PratikVIPPredictions"
-CHANNEL_ID = "@TUMHARA_CHANNEL_USERNAME" 
+# Tera Personal Telegram Chat ID (Ab saari predictions seedha tere DM par aayengi)
+CHANNEL_ID = "7793467471" 
 
 API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json"
 
@@ -30,10 +29,10 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS history (issue_no TEXT PRIMARY KEY,
 cursor.execute('''CREATE TABLE IF NOT EXISTS predictions (issue_no TEXT PRIMARY KEY, predicted_result TEXT)''')
 conn.commit()
 
-# --- PRIVATE MESSAGE HANDLER (Bot zinda hai check karne ke liye) ---
+# --- PRIVATE MESSAGE HANDLER (/start command) ---
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 Hello Pratik! \n\nMera 20-Logic Quantitative Engine background mein 24/7 chalu hai. \n\n📊 Main chup-chaap API se data collect kar raha hu aur VIP Channel mein automatically predictions bhejunga. \n\n*Note: Main yaha private chat me signals nahi deta, sirf channel me deta hu!*")
+    bot.reply_to(message, "🚀 Hello Pratik! \n\nMera 20-Logic Quantitative Engine background mein 24/7 chalu hai. \n\n📊 Main chup-chaap API data collect kar raha hu aur 1000 results hote hi signals seedha yahin DM mein bhejunga!")
 
 # --- API DATA FETCHER ---
 def fetch_api_data():
@@ -220,7 +219,7 @@ def bot_main_loop():
                     bot.send_message(CHANNEL_ID, f"⏳ **System Data Collection...**\n\n📊 High Accuracy Real Data.\n📈 Collected: {total_count} / 1000\n\n*20 Tagde Logics Engine will trigger automatically at 1000 results!*", parse_mode="Markdown")
                     last_notified = milestone
                 except Exception as e:
-                    print("Notify Error (Check Channel ID):", e)
+                    print("Notify Error:", e)
         else:
             cursor.execute("SELECT issue_no, result FROM history ORDER BY issue_no DESC")
             all_data = cursor.fetchall()
@@ -254,7 +253,7 @@ def bot_main_loop():
 🎯 Action      ➤  BET {prediction.upper()} {pred_col}
 🔥 Confidence  ➤  {confidence}% REAL
 ▰▰▰▰▰▰▰▰▰▰▰▰▰▰
-    24/7 ᴩᴀɪᴅ ᴛᴏᴏʟ 
+    24/7 ᴩᴀɪᴅ ᴛ00𝗟 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰▰
 ╔     📋 LAST 10 RESULTS
 
@@ -264,7 +263,7 @@ def bot_main_loop():
                     bot.send_message(CHANNEL_ID, final_msg)
                     print(f"Prediction Sent {next_issue} | Big: {big_votes}, Small: {small_votes}")
                 except Exception as e:
-                    print("Telegram Error (Check Channel ID & Admin Rights):", e)
+                    print("Telegram Error:", e)
 
         time.sleep(15)
 
@@ -277,6 +276,6 @@ if __name__ == "__main__":
     bot_thread = Thread(target=bot_main_loop)
     bot_thread.start()
     
-    # Start telegram message polling (This keeps the /start command working)
+    # Start telegram message polling
     print("Bot is starting...")
     bot.polling(none_stop=True)
