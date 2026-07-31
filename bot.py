@@ -1,12 +1,11 @@
 import telebot
-import requests
+import cloudscraper
 import sqlite3
 import time
-import urllib.parse
 from flask import Flask
 from threading import Thread
 
-# TERA NAYA BOT TOKEN 
+# TERA BOT TOKEN
 bot = telebot.TeleBot("8965203772:AAEQS9Qqiab_81Ckq9lLiJvTvV6frRId0HQ")
 
 # Tera Personal Telegram Chat ID 
@@ -14,11 +13,21 @@ CHANNEL_ID = "7793467471"
 
 API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json"
 
+# --- CLOUDSCRAPER STEALTH ENGINE ---
+# Yeh Cloudflare ko dhoka dega ki hum asli Android Mobile Browser hain
+scraper = cloudscraper.create_scraper(
+    browser={
+        'browser': 'chrome',
+        'platform': 'android',
+        'desktop': False
+    }
+)
+
 # --- FLASK SERVER ---
 app = Flask(__name__)
 @app.route('/')
 def home():
-    return "10-Logic PRO (Proxy Bypass Edition) is Live 24/7!"
+    return "10-Logic PRO (Cloudscraper Stealth Edition) is Live 24/7!"
 
 def run_server():
     app.run(host="0.0.0.0", port=8080)
@@ -32,31 +41,7 @@ conn.commit()
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX (Proxy Edition) 24/7 chalu hai. \n\n📊 Cloudflare 403 Bypass Active. Type /status to check LIVE DB!")
-
-# --- 🛡️ PROXY BYPASS ENGINE (TO FIX 403 ON CLOUD) ---
-def get_bypassed_data():
-    target_url = f"{API_URL}?ts={int(time.time()*1000)}"
-    encoded_url = urllib.parse.quote(target_url)
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    
-    # 1st Proxy Route: AllOrigins
-    proxy_1 = f"https://api.allorigins.win/raw?url={encoded_url}"
-    try:
-        res1 = requests.get(proxy_1, headers=headers, timeout=10)
-        if res1.status_code == 200:
-            return res1, "🟢 Route 1 (AllOrigins) Success"
-    except: pass
-
-    # 2nd Proxy Route: CodeTabs
-    proxy_2 = f"https://api.codetabs.com/v1/proxy?quest={encoded_url}"
-    try:
-        res2 = requests.get(proxy_2, headers=headers, timeout=10)
-        if res2.status_code == 200:
-            return res2, "🟢 Route 2 (CodeTabs) Success"
-    except: pass
-    
-    return None, "🔴 Error: Both Proxy Routes Blocked or Timed Out"
+    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC (Cloudscraper Stealth Edition) 24/7 chalu hai. \n\n📊 Type /status to check LIVE DB!")
 
 # --- LIVE STATUS & API DEBUGGER ---
 @bot.message_handler(commands=['status'])
@@ -65,32 +50,33 @@ def check_status(message):
         cursor.execute("SELECT COUNT(*) FROM history")
         count = cursor.fetchone()[0]
         
-        # Test Live Proxy Connection
-        res, proxy_status = get_bypassed_data()
+        url = f"{API_URL}?ts={int(time.time()*1000)}"
+        res = scraper.get(url, timeout=10)
         
-        api_reply = f"Proxy Status: {proxy_status}\n"
-        if res and res.status_code == 200:
+        api_reply = f"Status Code: {res.status_code}\n"
+        if res.status_code == 200:
             try:
                 json_data = res.json()
                 items = json_data.get('data', {}).get('list', [])
                 if not items and isinstance(json_data, list): items = json_data
                 api_reply += f"🟢 Data Received: {len(items)} records perfectly!"
             except:
-                api_reply += "🔴 Error: Target site returned non-JSON data."
+                api_reply += "🔴 Error: JSON fail (Cloudflare Captcha page block)"
         else:
-            api_reply += "🔴 Error: Could not reach API via Proxies."
+            api_reply += f"🔴 Error: Blocked by WAF (Code {res.status_code})"
 
-        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 DB History Count: {count}\n\n🔍 **LIVE PROXY TEST:**\n{api_reply}")
+        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 DB History Count: {count}\n\n🔍 **LIVE CLOUDSCRAPER TEST:**\n{api_reply}")
     except Exception as e:
         bot.reply_to(message, f"Error: {e}")
 
 # --- DB FETCHER ---
 def fetch_api_data():
     try:
-        response, status_msg = get_bypassed_data()
+        url = f"{API_URL}?ts={int(time.time()*1000)}"
+        response = scraper.get(url, timeout=15)
         
-        if not response or response.status_code != 200:
-            return 0, status_msg
+        if response.status_code != 200:
+            return 0, f"Error {response.status_code}"
             
         data = response.json()
         items = data.get('data', {}).get('list', [])
@@ -123,31 +109,25 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
 
     nums = [x[1] for x in recent_data]
     res = [x[0] for x in recent_data]
-    
     votes = {"Big": 0.0, "Small": 0.0}
 
-    # Logic 1: WMA
     w = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
     limit = min(len(nums), 10)
     w_sum = sum(v * weight for v, weight in zip(nums[:limit], w[:limit]))
-    weight_total = sum(w[:limit])
-    if (w_sum / weight_total) >= 4.5: votes["Big"] += 1.5 
+    if (w_sum / sum(w[:limit])) >= 4.5: votes["Big"] += 1.5 
     else: votes["Small"] += 1.5
 
-    # Logic 2: Volatility
     avg = sum(nums[:limit]) / limit
     variance = sum((x - avg)**2 for x in nums[:limit]) / limit
     if (variance ** 0.5) > 2.8: votes["Small" if nums[0] >= 5 else "Big"] += 1.2
     else: votes["Big" if nums[0] >= 5 else "Small"] += 1.2
 
-    # Logic 3: RSI
     rsi_list = res[:14]
     rsi = (rsi_list.count('Big') / len(rsi_list)) * 100 if rsi_list else 50
     if rsi > 70: votes["Small"] += 1.5
     elif rsi < 30: votes["Big"] += 1.5
     else: votes[res[0]] += 0.5
 
-    # Logic 4: Markov
     if len(res) >= 4:
         seq_3 = tuple(res[:3])
         b_nxt, s_nxt = 0, 0
@@ -161,25 +141,21 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
     else:
         votes[res[0]] += 0.5
 
-    # Logic 5: Fibonacci
     fib_avg = (sum(nums[:3])/min(len(nums), 3) * 0.5) + (sum(nums[:5])/min(len(nums), 5) * 0.3) + (sum(nums[:8])/min(len(nums), 8) * 0.2)
     if fib_avg >= 4.5: votes["Big"] += 1.0
     else: votes["Small"] += 1.0
 
-    # Logic 6: ROC
     roc = nums[0] - nums[-1]
     if roc > 0: votes["Big"] += 1.0
     elif roc < 0: votes["Small"] += 1.0
     else: votes[res[0]] += 0.5
 
-    # Logic 7: Parity
     odds = sum(1 for n in nums[:limit] if n % 2 != 0)
     evens = limit - odds
     if odds > evens and res[0] == 'Small': votes["Small"] += 0.8
     elif evens > odds and res[0] == 'Big': votes["Big"] += 0.8
     else: votes["Big" if nums[0] >= 5 else "Small"] += 0.8
 
-    # Logic 8: Streak
     streak = 0
     for r in res:
         if r == res[0]: streak += 1
@@ -187,14 +163,12 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
     if streak >= 4: votes["Small" if res[0] == "Big" else "Big"] += 2.0 
     else: votes[res[0]] += 1.0
 
-    # Logic 9: Gravity
     grav_list = nums[:50]
     cg_50 = sum(grav_list) / len(grav_list) if grav_list else 4.5
     if cg_50 > 4.7: votes["Small"] += 1.0
     elif cg_50 < 4.3: votes["Big"] += 1.0
     else: votes[res[0]] += 0.5
 
-    # Logic 10: Recovery
     db_cursor.execute('SELECT h.result, p.predicted_result FROM history h JOIN predictions p ON h.issue_no = p.issue_no ORDER BY h.issue_no DESC LIMIT 2')
     recent_db = db_cursor.fetchall()
     loss_streak = 0
@@ -206,7 +180,6 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
     elif loss_streak >= 2: votes["Small" if res[0] == "Big" else "Big"] += 3.0
     else: votes[res[0]] += 1.0
 
-    # Confidence calculation
     total_votes = votes["Big"] + votes["Small"]
     if votes["Big"] >= votes["Small"]:
         pred = "Big"
@@ -255,7 +228,7 @@ def bot_main_loop():
             
             if total_count < 10:
                 if time.time() - last_notify_time > 60:
-                    bot.send_message(int(CHANNEL_ID), f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 10\n⚠️ Proxy Status: {api_status}")
+                    bot.send_message(int(CHANNEL_ID), f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 10\n⚠️ Status: {api_status}")
                     last_notify_time = time.time()
             else:
                 cursor.execute("SELECT issue_no, result, number FROM history ORDER BY issue_no DESC")
@@ -311,7 +284,7 @@ if __name__ == "__main__":
     except Exception:
         pass
         
-    print("Bot is starting afresh with 403-Bypass Proxies...")
+    print("Bot is starting afresh with Cloudscraper Bypass...")
     
     while True:
         try:
