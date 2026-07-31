@@ -2,6 +2,7 @@ import telebot
 import requests
 import sqlite3
 import time
+import urllib.parse
 from flask import Flask
 from threading import Thread
 
@@ -17,7 +18,7 @@ API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json
 app = Flask(__name__)
 @app.route('/')
 def home():
-    return "10-Logic Pro Engine is Live 24/7!"
+    return "10-Logic PRO (Proxy Bypass Edition) is Live 24/7!"
 
 def run_server():
     app.run(host="0.0.0.0", port=8080)
@@ -31,23 +32,31 @@ conn.commit()
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX ENGINE 24/7 chalu hai. \n\n📊 Type /status to check LIVE API connection!")
+    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX (Proxy Edition) 24/7 chalu hai. \n\n📊 Cloudflare 403 Bypass Active. Type /status to check LIVE DB!")
 
-# --- HARDCORE MOBILE HEADERS (ANTI-403) ---
-def get_bypass_headers():
-    return {
-        "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
-        "Referer": "https://ar-lottery01.com/",
-        "Origin": "https://ar-lottery01.com",
-        "Connection": "keep-alive",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache"
-    }
+# --- 🛡️ PROXY BYPASS ENGINE (TO FIX 403 ON CLOUD) ---
+def get_bypassed_data():
+    target_url = f"{API_URL}?ts={int(time.time()*1000)}"
+    encoded_url = urllib.parse.quote(target_url)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    
+    # 1st Proxy Route: AllOrigins
+    proxy_1 = f"https://api.allorigins.win/raw?url={encoded_url}"
+    try:
+        res1 = requests.get(proxy_1, headers=headers, timeout=10)
+        if res1.status_code == 200:
+            return res1, "🟢 Route 1 (AllOrigins) Success"
+    except: pass
+
+    # 2nd Proxy Route: CodeTabs
+    proxy_2 = f"https://api.codetabs.com/v1/proxy?quest={encoded_url}"
+    try:
+        res2 = requests.get(proxy_2, headers=headers, timeout=10)
+        if res2.status_code == 200:
+            return res2, "🟢 Route 2 (CodeTabs) Success"
+    except: pass
+    
+    return None, "🔴 Error: Both Proxy Routes Blocked or Timed Out"
 
 # --- LIVE STATUS & API DEBUGGER ---
 @bot.message_handler(commands=['status'])
@@ -56,32 +65,32 @@ def check_status(message):
         cursor.execute("SELECT COUNT(*) FROM history")
         count = cursor.fetchone()[0]
         
-        url = f"{API_URL}?ts={int(time.time()*1000)}"
-        res = requests.get(url, headers=get_bypass_headers(), timeout=5)
+        # Test Live Proxy Connection
+        res, proxy_status = get_bypassed_data()
         
-        api_reply = f"Status Code: {res.status_code}\n"
-        if res.status_code == 200:
+        api_reply = f"Proxy Status: {proxy_status}\n"
+        if res and res.status_code == 200:
             try:
                 json_data = res.json()
                 items = json_data.get('data', {}).get('list', [])
                 if not items and isinstance(json_data, list): items = json_data
-                api_reply += f"🟢 Data Received: {len(items)} records in 1 hit!"
+                api_reply += f"🟢 Data Received: {len(items)} records perfectly!"
             except:
-                api_reply += "🔴 Error: JSON parse fail (Cloudflare HTML page blocked it)"
+                api_reply += "🔴 Error: Target site returned non-JSON data."
         else:
-            api_reply += f"🔴 Error: API Blocked Request (Code {res.status_code})"
+            api_reply += "🔴 Error: Could not reach API via Proxies."
 
-        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 DB History Count: {count}\n\n🔍 **LIVE API TEST:**\n{api_reply}")
+        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 DB History Count: {count}\n\n🔍 **LIVE PROXY TEST:**\n{api_reply}")
     except Exception as e:
         bot.reply_to(message, f"Error: {e}")
 
+# --- DB FETCHER ---
 def fetch_api_data():
     try:
-        url = f"{API_URL}?ts={int(time.time()*1000)}"
-        response = requests.get(url, headers=get_bypass_headers(), timeout=10)
+        response, status_msg = get_bypassed_data()
         
-        if response.status_code != 200:
-            return 0, f"Error {response.status_code}"
+        if not response or response.status_code != 200:
+            return 0, status_msg
             
         data = response.json()
         items = data.get('data', {}).get('list', [])
@@ -103,7 +112,7 @@ def fetch_api_data():
             cursor.execute("INSERT OR IGNORE INTO history (issue_no, result, number) VALUES (?, ?, ?)", (issue_no, result, number))
             if cursor.rowcount > 0: inserted += 1
         conn.commit()
-        return inserted, f"SUCCESS (Got {len(items)})"
+        return inserted, "SUCCESS"
     except Exception as e:
         return 0, str(e)
 
@@ -246,7 +255,7 @@ def bot_main_loop():
             
             if total_count < 10:
                 if time.time() - last_notify_time > 60:
-                    bot.send_message(int(CHANNEL_ID), f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 10\n⚠️ API Last Ping: {api_status}")
+                    bot.send_message(int(CHANNEL_ID), f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 10\n⚠️ Proxy Status: {api_status}")
                     last_notify_time = time.time()
             else:
                 cursor.execute("SELECT issue_no, result, number FROM history ORDER BY issue_no DESC")
@@ -302,7 +311,7 @@ if __name__ == "__main__":
     except Exception:
         pass
         
-    print("Bot is starting afresh with Anti-403 Mobile Headers...")
+    print("Bot is starting afresh with 403-Bypass Proxies...")
     
     while True:
         try:
