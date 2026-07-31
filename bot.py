@@ -31,7 +31,23 @@ conn.commit()
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX ENGINE (0% Fake) 24/7 chalu hai. \n\n📊 Type /status to check LIVE API connection!")
+    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX ENGINE 24/7 chalu hai. \n\n📊 Type /status to check LIVE API connection!")
+
+# --- HARDCORE MOBILE HEADERS (ANTI-403) ---
+def get_bypass_headers():
+    return {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+        "Referer": "https://ar-lottery01.com/",
+        "Origin": "https://ar-lottery01.com",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+    }
 
 # --- LIVE STATUS & API DEBUGGER ---
 @bot.message_handler(commands=['status'])
@@ -40,12 +56,8 @@ def check_status(message):
         cursor.execute("SELECT COUNT(*) FROM history")
         count = cursor.fetchone()[0]
         
-        # LIVE API PING TEST (To see exactly what API is returning)
         url = f"{API_URL}?ts={int(time.time()*1000)}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        res = requests.get(url, headers=headers, timeout=5)
+        res = requests.get(url, headers=get_bypass_headers(), timeout=5)
         
         api_reply = f"Status Code: {res.status_code}\n"
         if res.status_code == 200:
@@ -55,7 +67,7 @@ def check_status(message):
                 if not items and isinstance(json_data, list): items = json_data
                 api_reply += f"🟢 Data Received: {len(items)} records in 1 hit!"
             except:
-                api_reply += "🔴 Error: JSON parse fail (API ne HTML/Cloudflare block bhej diya hai)"
+                api_reply += "🔴 Error: JSON parse fail (Cloudflare HTML page blocked it)"
         else:
             api_reply += f"🔴 Error: API Blocked Request (Code {res.status_code})"
 
@@ -63,19 +75,15 @@ def check_status(message):
     except Exception as e:
         bot.reply_to(message, f"Error: {e}")
 
-# --- API FETCH WITH ANTI-BLOCK HEADERS ---
 def fetch_api_data():
     try:
-        # Added Timestamp to bypass Cache/Cloudflare exactly like TDX script
         url = f"{API_URL}?ts={int(time.time()*1000)}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "application/json, text/plain, */*",
-            "Connection": "keep-alive"
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        data = response.json()
+        response = requests.get(url, headers=get_bypass_headers(), timeout=10)
         
+        if response.status_code != 200:
+            return 0, f"Error {response.status_code}"
+            
+        data = response.json()
         items = data.get('data', {}).get('list', [])
         if not items and isinstance(data, list):
             items = data
@@ -99,7 +107,7 @@ def fetch_api_data():
     except Exception as e:
         return 0, str(e)
 
-# --- 🧠 THE 10-LOGIC ADVANCED ENGINE (SAFEGUARDED FOR 10 RESULTS) ---
+# --- 🧠 THE 10-LOGIC ADVANCED ENGINE ---
 def ten_logic_matrix_engine(recent_data, db_cursor):
     if len(recent_data) < 10:
         return "Big", 50, "⚙️ GATHERING DATA", [0, 5]
@@ -236,7 +244,6 @@ def bot_main_loop():
             cursor.execute("SELECT COUNT(*) FROM history")
             total_count = cursor.fetchone()[0]
             
-            # Start predicting immediately after 10 results!
             if total_count < 10:
                 if time.time() - last_notify_time > 60:
                     bot.send_message(int(CHANNEL_ID), f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 10\n⚠️ API Last Ping: {api_status}")
@@ -295,11 +302,11 @@ if __name__ == "__main__":
     except Exception:
         pass
         
-    print("Bot is starting afresh with Auto-Reconnect...")
+    print("Bot is starting afresh with Anti-403 Mobile Headers...")
     
     while True:
         try:
             bot.polling(none_stop=True, skip_pending=True)
         except Exception as e:
-            print(f"Telegram API 409 Conflict Aaya! 15 sec wait... Error: {e}")
+            print(f"Telegram API Conflict Aaya! 15 sec wait... Error: {e}")
             time.sleep(15)
