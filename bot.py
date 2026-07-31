@@ -6,7 +6,7 @@ from flask import Flask
 from threading import Thread
 
 # Tumhara Bot Token
-bot = telebot.TeleBot("8965203772:AAHdx_rTZJpYTDsAdRf7UHH7sfvDPa0lS_Q")
+bot = telebot.TeleBot("8965203772:AAEQS9Qqiab_81Ckq9lLiJvTvV6frRId0HQ")
 
 # Tera Personal Telegram Chat ID 
 CHANNEL_ID = "7793467471" 
