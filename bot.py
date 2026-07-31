@@ -5,7 +5,7 @@ import time
 from flask import Flask
 from threading import Thread
 
-# ⚠️ YAHAN APNA NAYA WALA BOT TOKEN DAALNA (Jo BotFather ne naya diya tha)
+# TERA NAYA BOT TOKEN (Updated!)
 bot = telebot.TeleBot("8965203772:AAEQS9Qqiab_81Ckq9lLiJvTvV6frRId0HQ")
 
 # Tera Personal Telegram Chat ID 
@@ -39,7 +39,7 @@ def check_status(message):
     try:
         cursor.execute("SELECT COUNT(*) FROM history")
         count = cursor.fetchone()[0]
-        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 Database History Count: {count} \n\n*(Agar ye 0 hai, toh matlab API Render server ko block kar rahi hai ya API link badal gaya hai)*")
+        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 Database History Count: {count} \n\n*(Agar ye 20 se kam hai, toh bot data collect hone ka wait kar raha hai)*")
     except Exception as e:
         bot.reply_to(message, f"Error reading DB: {e}")
 
@@ -205,7 +205,6 @@ def bot_main_loop():
             total_count = cursor.fetchone()[0]
             
             if total_count < 20:
-                # Agar data nahi aa raha, toh har 60 second me telegram par alert aayega
                 if time.time() - last_notify_time > 60:
                     bot.send_message(CHANNEL_ID, f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 20\n⚠️ API Check: {api_status}\n\n*(Bot wait kar raha hai data aane ka)*")
                     last_notify_time = time.time()
@@ -263,5 +262,13 @@ if __name__ == "__main__":
     except Exception:
         pass
         
-    print("Bot is starting afresh...")
-    bot.polling(none_stop=True, skip_pending=True)
+    print("Bot is starting afresh with Auto-Reconnect...")
+    
+    # THE ULTIMATE ANTI-409 LOOP
+    while True:
+        try:
+            bot.polling(none_stop=True, skip_pending=True)
+        except Exception as e:
+            print(f"Telegram API 409 Conflict Aaya! 15 sec wait kar raha hu... Error: {e}")
+            time.sleep(15)
+
