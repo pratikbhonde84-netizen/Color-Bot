@@ -5,7 +5,7 @@ import time
 from flask import Flask
 from threading import Thread
 
-# Tumhara Bot Token
+# ⚠️ YAHAN APNA NAYA WALA BOT TOKEN DAALNA (Jo BotFather ne naya diya tha)
 bot = telebot.TeleBot("8965203772:AAEQS9Qqiab_81Ckq9lLiJvTvV6frRId0HQ")
 
 # Tera Personal Telegram Chat ID 
@@ -17,7 +17,7 @@ API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json
 app = Flask(__name__)
 @app.route('/')
 def home():
-    return "10-Logic Pure Matrix Engine is Live 24/7!"
+    return "10-Logic Pro Engine is Live 24/7!"
 
 def run_server():
     app.run(host="0.0.0.0", port=8080)
@@ -31,11 +31,21 @@ conn.commit()
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 Hello! \n\n10-LOGIC ADVANCED MATRIX ENGINE (0% Fake) 24/7 chalu hai. \n\n📊 Koi skip system nahi. Pure mathematical confidence ke sath signals aayenge!")
+    bot.reply_to(message, "🚀 Hello Pratik! \n\n10-LOGIC ADVANCED MATRIX ENGINE (0% Fake) 24/7 chalu hai. \n\n📊 Ab tu /status type karke live check kar sakta hai ki DB me data aaya ya nahi!")
+
+# --- LIVE STATUS CHECKER ---
+@bot.message_handler(commands=['status'])
+def check_status(message):
+    try:
+        cursor.execute("SELECT COUNT(*) FROM history")
+        count = cursor.fetchone()[0]
+        bot.reply_to(message, f"🟢 **BOT ZINDA HAI!**\n\n📊 Database History Count: {count} \n\n*(Agar ye 0 hai, toh matlab API Render server ko block kar rahi hai ya API link badal gaya hai)*")
+    except Exception as e:
+        bot.reply_to(message, f"Error reading DB: {e}")
 
 def fetch_api_data():
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
         response = requests.get(API_URL, headers=headers, timeout=10)
         data = response.json()
         
@@ -58,13 +68,12 @@ def fetch_api_data():
             cursor.execute("INSERT OR IGNORE INTO history (issue_no, result, number) VALUES (?, ?, ?)", (issue_no, result, number))
             if cursor.rowcount > 0: inserted += 1
         conn.commit()
-        return inserted
+        return inserted, "SUCCESS"
     except Exception as e:
-        return 0
+        return 0, str(e)
 
 # --- 🧠 THE 10-LOGIC ADVANCED ENGINE (0% FAKE MATH) ---
 def ten_logic_matrix_engine(recent_data, db_cursor):
-    # recent_data = [(result_string, exact_number), ...]
     if len(recent_data) < 20:
         return "Big", 50, "⚙️ GATHERING DATA", [0, 5]
 
@@ -73,38 +82,25 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
     
     votes = {"Big": 0.0, "Small": 0.0}
 
-    # ---------------------------------------------------------
-    # LOGIC 1: Weighted Moving Average (WMA) on exact numbers
-    # ---------------------------------------------------------
+    # Logic 1: WMA
     w = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
     w_sum = sum(v * weight for v, weight in zip(nums[:10], w))
-    w_avg = w_sum / 5.5
-    if w_avg >= 4.5: votes["Big"] += 1.5 
+    if (w_sum / 5.5) >= 4.5: votes["Big"] += 1.5 
     else: votes["Small"] += 1.5
 
-    # ---------------------------------------------------------
-    # LOGIC 2: Standard Deviation Volatility (Mean Reversion)
-    # ---------------------------------------------------------
+    # Logic 2: Volatility
     avg = sum(nums[:10]) / 10
     variance = sum((x - avg)**2 for x in nums[:10]) / 10
-    std_dev = variance ** 0.5
-    if std_dev > 2.8: # Highly volatile market (Expect opposite)
-        votes["Small" if nums[0] >= 5 else "Big"] += 1.2
-    else: # Stable market (Follow trend)
-        votes["Big" if nums[0] >= 5 else "Small"] += 1.2
+    if (variance ** 0.5) > 2.8: votes["Small" if nums[0] >= 5 else "Big"] += 1.2
+    else: votes["Big" if nums[0] >= 5 else "Small"] += 1.2
 
-    # ---------------------------------------------------------
-    # LOGIC 3: RSI (Relative Strength Index) Check
-    # ---------------------------------------------------------
-    big_count = res[:14].count('Big')
-    rsi = (big_count / 14.0) * 100
-    if rsi > 70: votes["Small"] += 1.5 # Overbought
-    elif rsi < 30: votes["Big"] += 1.5 # Oversold
+    # Logic 3: RSI
+    rsi = (res[:14].count('Big') / 14.0) * 100
+    if rsi > 70: votes["Small"] += 1.5
+    elif rsi < 30: votes["Big"] += 1.5
     else: votes[res[0]] += 0.5
 
-    # ---------------------------------------------------------
-    # LOGIC 4: 3rd-Order Markov Chain (Historical Transition)
-    # ---------------------------------------------------------
+    # Logic 4: Markov
     seq_3 = tuple(res[:3])
     b_nxt, s_nxt = 0, 0
     for i in range(3, len(res)-1):
@@ -115,56 +111,41 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
     elif s_nxt > b_nxt: votes["Small"] += 1.5
     else: votes[res[0]] += 0.5
 
-    # ---------------------------------------------------------
-    # LOGIC 5: Fibonacci Sequence Momentum (Periods 3, 5, 8)
-    # ---------------------------------------------------------
+    # Logic 5: Fibonacci
     fib_avg = (sum(nums[:3])/3 * 0.5) + (sum(nums[:5])/5 * 0.3) + (sum(nums[:8])/8 * 0.2)
     if fib_avg >= 4.5: votes["Big"] += 1.0
     else: votes["Small"] += 1.0
 
-    # ---------------------------------------------------------
-    # LOGIC 6: Rate of Change (Momentum Speed & Acceleration)
-    # ---------------------------------------------------------
+    # Logic 6: ROC
     roc = nums[0] - nums[9]
     if roc > 0: votes["Big"] += 1.0
     elif roc < 0: votes["Small"] += 1.0
     else: votes[res[0]] += 0.5
 
-    # ---------------------------------------------------------
-    # LOGIC 7: Parity Imbalance (Odd/Even Correlation)
-    # ---------------------------------------------------------
+    # Logic 7: Parity
     odds = sum(1 for n in nums[:10] if n % 2 != 0)
     evens = 10 - odds
     if odds > evens and res[0] == 'Small': votes["Small"] += 0.8
     elif evens > odds and res[0] == 'Big': votes["Big"] += 0.8
     else: votes["Big" if nums[0] >= 5 else "Small"] += 0.8
 
-    # ---------------------------------------------------------
-    # LOGIC 8: Streak Exhaustion (Consecutive Break)
-    # ---------------------------------------------------------
+    # Logic 8: Streak
     streak = 0
     for r in res:
         if r == res[0]: streak += 1
         else: break
-    if streak >= 4:
-        votes["Small" if res[0] == "Big" else "Big"] += 2.0 # High weight reversal
-    else:
-        votes[res[0]] += 1.0
+    if streak >= 4: votes["Small" if res[0] == "Big" else "Big"] += 2.0 
+    else: votes[res[0]] += 1.0
 
-    # ---------------------------------------------------------
-    # LOGIC 9: Grand Matrix Gravity (50-Period Pull)
-    # ---------------------------------------------------------
+    # Logic 9: Gravity
     if len(nums) >= 50:
         cg_50 = sum(nums[:50]) / 50
-        if cg_50 > 4.7: votes["Small"] += 1.0 # Pulls down to center
-        elif cg_50 < 4.3: votes["Big"] += 1.0 # Pulls up to center
+        if cg_50 > 4.7: votes["Small"] += 1.0
+        elif cg_50 < 4.3: votes["Big"] += 1.0
         else: votes[res[0]] += 0.5
-    else:
-        votes[res[0]] += 1.0
+    else: votes[res[0]] += 1.0
 
-    # ---------------------------------------------------------
-    # LOGIC 10: 2-Level Recovery Check (Database Integrated)
-    # ---------------------------------------------------------
+    # Logic 10: Recovery
     db_cursor.execute('SELECT h.result, p.predicted_result FROM history h JOIN predictions p ON h.issue_no = p.issue_no ORDER BY h.issue_no DESC LIMIT 2')
     recent_db = db_cursor.fetchall()
     loss_streak = 0
@@ -172,34 +153,21 @@ def ten_logic_matrix_engine(recent_data, db_cursor):
         for act, pre in recent_db:
             if act and pre and act != pre: loss_streak += 1
             else: break
-            
-    if loss_streak == 1:
-        votes[res[0]] += 2.0 # Follow trend on first loss
-    elif loss_streak >= 2:
-        votes["Small" if res[0] == "Big" else "Big"] += 3.0 # Hard flip on second loss
-    else:
-        votes[res[0]] += 1.0
+    if loss_streak == 1: votes[res[0]] += 2.0
+    elif loss_streak >= 2: votes["Small" if res[0] == "Big" else "Big"] += 3.0
+    else: votes[res[0]] += 1.0
 
-    # ==========================================
-    # FINAL ZERO-FAKE CONFIDENCE CALCULATION
-    # ==========================================
+    # Confidence calculation
     total_votes = votes["Big"] + votes["Small"]
     if votes["Big"] >= votes["Small"]:
         pred = "Big"
-        conf_pct = (votes["Big"] / total_votes) * 100
+        conf_pct = (votes["Big"] / total_votes) * 100 if total_votes > 0 else 50
     else:
         pred = "Small"
-        conf_pct = (votes["Small"] / total_votes) * 100
+        conf_pct = (votes["Small"] / total_votes) * 100 if total_votes > 0 else 50
 
-    # No fake bounds, just strict integer percentage of exact mathematical weights.
-    final_conf = int(conf_pct)
-
-    # Backup Target Numbers: Exact mirror of current numerical gravity
     target_vals = [nums[0], (nums[0] + 5) % 10]
-    
-    strat_name = "⚙️ 10-LOGIC MATRIX PRO"
-    
-    return pred, final_conf, strat_name, target_vals
+    return pred, int(conf_pct), "⚙️ 10-LOGIC MATRIX PRO", target_vals
 
 def generate_last_10_message():
     cursor.execute('''
@@ -218,7 +186,6 @@ def generate_last_10_message():
         num = row[2]
         predicted = row[3]
         
-        # NO SKIP WORD. Either purely shows result or WIN/LOSS
         if not predicted:
             status = "---"
             icon = "⚪"
@@ -229,40 +196,40 @@ def generate_last_10_message():
         msg += f"║ {icon} #{issue} ──► {actual_res}={num}  {status}\n"
     return msg
 
-last_notified = 0
 def bot_main_loop():
-    global last_notified
-    
+    last_notify_time = 0
     while True:
-        fetch_api_data()
-        cursor.execute("SELECT COUNT(*) FROM history")
-        total_count = cursor.fetchone()[0]
-        
-        if total_count < 20:
-            print(f"Collecting baseline logic data: {total_count}/20")
-        else:
-            cursor.execute("SELECT issue_no, result, number FROM history ORDER BY issue_no DESC")
-            all_data = cursor.fetchall()
-            latest_issue = all_data[0][0]
-            next_issue = str(int(latest_issue) + 1)
+        try:
+            inserted, api_status = fetch_api_data()
+            cursor.execute("SELECT COUNT(*) FROM history")
+            total_count = cursor.fetchone()[0]
             
-            cursor.execute("SELECT * FROM predictions WHERE issue_no = ?", (next_issue,))
-            if not cursor.fetchone():
-                recent_data = [(row[1], row[2]) for row in all_data[:100]] 
+            if total_count < 20:
+                # Agar data nahi aa raha, toh har 60 second me telegram par alert aayega
+                if time.time() - last_notify_time > 60:
+                    bot.send_message(CHANNEL_ID, f"⏳ **Data Collect Ho Raha Hai...**\n\n📊 Collected: {total_count} / 20\n⚠️ API Check: {api_status}\n\n*(Bot wait kar raha hai data aane ka)*")
+                    last_notify_time = time.time()
+            else:
+                cursor.execute("SELECT issue_no, result, number FROM history ORDER BY issue_no DESC")
+                all_data = cursor.fetchall()
+                latest_issue = all_data[0][0]
+                next_issue = str(int(latest_issue) + 1)
                 
-                # EXECUTE 10-LOGIC PURE MATRIX ENGINE
-                prediction, confidence, strat_name, target_vals = ten_logic_matrix_engine(recent_data, cursor)
-                
-                cursor.execute("INSERT INTO predictions (issue_no, predicted_result) VALUES (?, ?)", (next_issue, prediction))
-                conn.commit()
-                
-                period_disp = next_issue[-6:]
-                pred_col = "🔴" if prediction == "Big" else "🔵"
-                last_10 = generate_last_10_message()
-                
-                target_str = ", ".join(map(str, target_vals))
-                
-                final_msg = f"""╭────────────────╮
+                cursor.execute("SELECT * FROM predictions WHERE issue_no = ?", (next_issue,))
+                if not cursor.fetchone():
+                    recent_data = [(row[1], row[2]) for row in all_data[:100]] 
+                    
+                    prediction, confidence, strat_name, target_vals = ten_logic_matrix_engine(recent_data, cursor)
+                    
+                    cursor.execute("INSERT INTO predictions (issue_no, predicted_result) VALUES (?, ?)", (next_issue, prediction))
+                    conn.commit()
+                    
+                    period_disp = next_issue[-6:]
+                    pred_col = "🔴" if prediction == "Big" else "🔵"
+                    last_10 = generate_last_10_message()
+                    target_str = ", ".join(map(str, target_vals))
+                    
+                    final_msg = f"""╭────────────────╮
       🌿 𝗣𝗘𝗥𝗜𝗢𝗗 : {period_disp}
 ▰▰▰▰▰▰▰▰▰▰▰▰▰▰
 📊 ENGINE      ➤  {strat_name}
@@ -276,12 +243,11 @@ def bot_main_loop():
 ╔     📋 LAST 10 RESULTS
 
 {last_10}╰─────────────────╯"""
-
-                try:
                     bot.send_message(CHANNEL_ID, final_msg)
-                except Exception as e:
-                    print("Send Error:", e)
-
+                    
+        except Exception as e:
+            print("Main Loop Error:", e)
+            
         time.sleep(15)
 
 if __name__ == "__main__":
